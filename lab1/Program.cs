@@ -26,8 +26,11 @@ namespace Builder
         public interface IBuilder
         {
             IBuilder AddSelect(string field);
+            IBuilder AddSelect();
+            IBuilder AddFrom(string field);
             IBuilder AddWhere(string field);
             IBuilder AddOrderBy(string field);
+            IBuilder SpeciefiedQuerry(int id, string field, string table);
         }
 
         class SQLHandler : IBuilder
@@ -41,6 +44,11 @@ namespace Builder
 
             public IBuilder AddSelect(string field)
             {
+                if (field == "*")
+                {
+                    return AddSelect();
+                }
+
                 if (this.querry.parts.Contains("*"))
                 {
                     throw new Exception("Already selected all");
@@ -57,7 +65,7 @@ namespace Builder
                 this.querry.Add(field);
                 return this;
             }
-            public IBuilder AddSelect()
+            public IBuilder AddSelect() // selects all
             {
                 if (!this.querry.parts.Contains("SELECT "))
                 {
@@ -66,7 +74,17 @@ namespace Builder
                 }
                 else
                 {
-                    throw new Exception("Already selected all");
+                    throw new Exception("Already selected");
+                }
+                return this;
+            }
+
+            public IBuilder AddFrom(string field)
+            {
+                if (!this.querry.parts.Contains("WHERE "))
+                {
+                    this.querry.Add(" FROM ");
+                    this.querry.Add(field);
                 }
                 return this;
             }
@@ -101,6 +119,17 @@ namespace Builder
                 return this;
             }
 
+            public IBuilder SpeciefiedQuerry(int id, string field, string table)
+            {
+                this
+                    .AddSelect("id")
+                    .AddSelect(field)
+                    .AddFrom(table)
+                    .AddWhere($"id = {id.ToString()}")
+                    .AddOrderBy(field);
+                return this;
+            }
+
             public SQLQuerry GetQuerry()
             {
                 return this.querry;
@@ -114,6 +143,7 @@ namespace Builder
                 .AddSelect("column1")
                 .AddSelect("column2")
                 .AddSelect("column3")
+                .AddFrom("table1")
                 .AddWhere("column1 > 20")
                 .AddWhere("column2 < 50")
                 .AddWhere("column3 < 50")
@@ -122,19 +152,11 @@ namespace Builder
                 .AddOrderBy("column3");
             Console.WriteLine(handler.GetQuerry());
 
-            /*
+            Console.WriteLine();
+
             handler.Reset();
-            handler
-                .AddSelect()
-                .AddSelect("column1")
-                .AddWhere("column1 > 20")
-                .AddWhere("column2 < 50")
-                .AddWhere("column3 < 50")
-                .AddOrderBy("column1")
-                .AddOrderBy("column2")
-                .AddOrderBy("column3");
-            Console.WriteLine(handler.querry);
-            */
+            handler.SpeciefiedQuerry(2, "freight", "products");
+            Console.WriteLine(handler.GetQuerry());
         }
     }
 }

@@ -8,6 +8,7 @@ namespace ConsoleApp8
 {
     internal class Program
     {
+        //використовую bridge
         class Product
         {
             public string name { get; set; }
